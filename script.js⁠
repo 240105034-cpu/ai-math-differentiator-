@@ -1,0 +1,159 @@
+let currentLevel = 1;
+let currentTaskData = {
+    problem: "",
+    hint: "",
+    solution: ""
+};
+
+function setLevel(level) {
+    currentLevel = level;
+    
+    // Обновляем визуальное оформление кнопок уровней
+    for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`btn-level-${i}`);
+        if (i === level) {
+            btn.className = "w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium flex justify-between items-center bg-indigo-50 border-indigo-300 text-indigo-900";
+        } else {
+            btn.className = "w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium flex justify-between items-center bg-white border-slate-200 text-slate-700 hover:bg-slate-50";
+        }
+    }
+
+    const badge = document.getElementById('badge-level');
+    const titles = {
+        1: "Уровень 1: Базовый (Foundation)",
+        2: "Уровень 2: Стандартный (Standard)",
+        3: "Уровень 3: Продвинутый (Advanced)"
+    };
+    badge.innerText = titles[level];
+}
+
+async function callGeminiAPI(promptText) {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    if (!apiKey) {
+        alert('Пожалуйста, введите ваш Gemini API ключ в настройках слева.');
+        return null;
+    }
+
+    // Показываем индикатор загрузки
+    const taskContainer = document.getElementById('taskContent');
+    taskContainer.innerHTML = `<div class="flex items-center gap-2 text-indigo-600 font-medium"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div> Генерация задачи через ИИ...</div>`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: promptText }]
+                }]
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+
+        const textResponse = data.candidates[0].content.parts[0].text;
+        return textResponse;
+    } catch (error) {
+        alert('Ошибка при обращении к Gemini API: ' + error.message);
+        taskContainer.innerHTML = `<span class="text-red-500">Ошибка загрузки. Проверьте API ключ.</span>`;
+        return null;
+    }
+}
+
+async function generateTask() {
+    let systemPrompt = `Ты эксперт по математике и искусственному интеллекту для дифференцированного обучения. 
+Тема: Интегралы.
+Сгенерируй математическую задачу на тему "Интегралы" для следующего уровня сложности:
+Уровень ${currentLevel}:
+- Если 1 (Foundation): Упрощенный контекст, пошаговый разбор, легкий неопределенный интеграл.
+- Если 2 (Standard): Стандартная академическая задача уровня колледжа/университета (например, определенный интеграл или метод замены).
+- Если 3 (Advanced): Сложное расширение, прикладная задача (например, вычисление площади фигуры, физическое приложение или интегрирование по частям).
+
+Формат ответа JSON (строго в формате JSON без лишнего текста, с поддержкой LaTeX для формул в кавычках):
+{
+  "problem": "Текст задачи с формулами в $...$",
+  "hint": "Подсказка для этого уровня",
+  "solution": "Подробное пошаговое решение"
+}`;
+
+    const responseText = await callGeminiAPI(systemPrompt);
+    if (!responseText) return;
+
+    try {
+        // Очищаем ответ от маркдаун-оберток если они есть
+        let cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        currentTaskData = JSON.parse(cleanJson);
+
+        document.getElementById('taskContent').innerHTML = `<div class="text-left w-full"><p class="font-medium text-slate-800 mb-2">${currentTaskData.problem}</p></div>`;
+        document.getElementById('feedbackSection').classList.add('hidden');
+        
+        // Перерендерим математические формулы через MathJax
+        if (window.MathJax) {
+            MathJax.typeset();
+        }
+    } catch (e) {
+        // Если ИИ ответил не в чистом JSON, выводим текст как есть
+        document.getElementById('taskContent').innerHTML = `<div class="text-left w-full"><p>${responseText}</p></div>`;
+    }
+}
+
+async function checkAnswer() {
+    const userAnswer = document.getElementById('userAnswer').value.trim();
+    if (!userAnswer) {
+        alert('Пожалуйста, введите ваш ответ перед проверкой.');
+        return;
+    }
+
+    let prompt = `Проверь решение студента по теме Интегралы.
+Уровень сложности: ${currentLevel}
+Условие задачи: ${currentTaskData.problem}
+Правильное решение: ${currentTaskData.solution}
+Ответ студента: ${userAnswer}
+
+Дай конструктивную обратную связь на русском языке: укажи, верно ли решение, объясни ошибки, если они есть, и похвали за успехи.`;
+
+    const responseText = await callGeminiAPI(prompt);
+    if (!responseText) return;
+
+    const feedbackSection = document.getElementById('feedbackSection');
+    const feedbackContent = document.getElementById('feedbackContent');
+    
+    feedbackSection.classList.remove('hidden');
+    feedbackContent.innerHTML = `<p>${responseText.replace(/\n/g, '<br>')}</p>`;
+
+    if (window.MathJax) {
+        MathJax.typeset();
+    }
+}
+
+async function getHint() {
+    if (!currentTaskData.hint) {
+        currentTaskData.hint = "Сначала попробуйте определить структуру подынтегральной функции и применить базовые правила интегрирования.";
+    }
+    const feedbackSection = document.getElementById('feedbackSection');
+    const feedbackContent = document.getElementById('feedbackContent');
+    
+    feedbackSection.classList.remove('hidden');
+    feedbackContent.innerHTML = `<strong>Подсказка (Уровень ${currentLevel}):</strong><br>${currentTaskData.hint}`;
+}
+
+async function toggleSolution() {
+    if (!currentTaskData.solution) {
+        currentTaskData.solution = "Решение будет доступно после генерации задачи.";
+    }
+    const feedbackSection = document.getElementById('feedbackSection');
+    const feedbackContent = document.getElementById('feedbackContent');
+    
+    feedbackSection.classList.remove('hidden');
+    feedbackContent.innerHTML = `<strong>Полное решение:</strong><br>${currentTaskData.solution.replace(/\n/g, '<br>')}`;
+
+    if (window.MathJax) {
+        MathJax.typeset();
+    }
+}
