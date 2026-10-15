@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Math Differentiator: Интегралы</title>
+    <!-- Подключение Tailwind CSS для красивого и современного дизайна -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключение MathJax для рендеринга математических формул -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Шапка сайта -->
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">AI Math Differentiator</h1>
+                <p class="text-indigo-200 text-sm mt-1">Интерактивная система дифференцированного обучения по теме: Интегралы</p>
+            </div>
+            <div class="mt-4 md:mt-0 bg-indigo-700 px-4 py-2 rounded-lg text-xs font-mono text-indigo-100 border border-indigo-500">
+                Topic 8: AI for Differentiated Learning[span_2](start_span)[span_2](end_span)
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Левая колонка: Настройки и выбор уровня -->
+        <section class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+            <h2 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <span>⚙️</span> Настройки сессии
+            </h2>
+
+            <!-- Ввод Gemini API Key -->
+            <div class="mb-5">
+                <label for="apiKey" class="block text-sm font-medium text-slate-700 mb-1">Gemini API Ключ:</label>
+                <input type="password" id="apiKey" placeholder="Введите ваш API ключ..." 
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <p class="text-xs text-slate-500 mt-1">Ключ хранится только в вашем браузере.</p>
+            </div>
+
+            <!-- Выбор уровня сложности (Три уровня по заданию) -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Уровень сложности:</label>
+                <div class="space-y-2">
+                    <button onclick="setLevel(1)" id="btn-level-1" class="w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium flex justify-between items-center bg-indigo-50 border-indigo-300 text-indigo-900">
+                        <div>
+                            <div class="font-bold">Уровень 1: Базовый</div>
+                            <div class="text-xs text-indigo-700 font-normal">Упрощенный контекст, подсказки, пошаговый разбор[span_3](start_span)[span_3](end_span)</div>
+                        </div>
+                        <span class="text-xs bg-indigo-200 px-2 py-1 rounded text-indigo-800">Foundation</span>
+                    </button>
+
+                    <button onclick="setLevel(2)" id="btn-level-2" class="w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium flex justify-between items-center bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
+                        <div>
+                            <div class="font-bold">Уровень 2: Стандартный</div>
+                            <div class="text-xs text-slate-500 font-normal">Стандартная школьная/вузовская задача[span_4](start_span)[span_4](end_span)</div>
+                        </div>
+                        <span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">Standard</span>
+                    </button>
+
+                    <button onclick="setLevel(3)" id="btn-level-3" class="w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium flex justify-between items-center bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
+                        <div>
+                            <div class="font-bold">Уровень 3: Продвинутый</div>
+                            <div class="text-xs text-slate-500 font-normal">Сложное расширение, прикладная задача[span_5](start_span)[span_5](end_span)</div>
+                        </div>
+                        <span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">Advanced</span>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="generateTask()" id="generateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition shadow-sm text-sm flex justify-center items-center gap-2">
+                <span>🔄</span> Сгенерировать задачу через ИИ
+            </button>
+        </section>
+
+        <!-- Правая колонка: Задание и работа с ИИ -->
+        <section class="lg:col-span-2 space-y-6">
+            
+            <!-- Блок задачи -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                    <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                        <span>📝</span> Математическая задача
+                    </h3>
+                    <span id="badge-level" class="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 text-indigo-800">
+                        Уровень 1: Базовый
+                    </span>
+                </div>
+
+                <div id="taskContent" class="text-slate-700 min-h-[120px] flex items-center justify-center text-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    Нажмите «Сгенерировать задачу через ИИ» для начала работы.
+                </div>
+
+                <!-- Блок ответа студента -->
+                <div class="mt-6">
+                    <label for="userAnswer" class="block text-sm font-medium text-slate-700 mb-2">Ваш ответ или решение:</label>
+                    <textarea id="userAnswer" rows="3" placeholder="Введите ваш промежуточный или итоговый ответ здесь..."
+                        class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="mt-4 flex gap-3">
+                    <button onclick="checkAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
+                        Проверить с ИИ
+                    </button>
+                    <button onclick="getHint()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
+                        Получить подсказку[span_6](start_span)[span_6](end_span)
+                    </button>
+                    <button onclick="toggleSolution()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-sm font-medium transition">
+                        Показать решение
+                    </button>
+                </div>
+            </div>
+
+            <!-- Блок обратной связи от ИИ -->
+            <div id="feedbackSection" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
+                <h3 class="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+                    <span>💡</span> Ответ и обратная связь от ИИ[span_7](start_span)[span_7](end_span)
+                </h3>
+                <div id="feedbackContent" class="text-slate-700 text-sm space-y-2 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+        Educational Technology & AI • Individual Assignment: Web-Based AI Math Differentiator[span_8](start_span)[span_8](end_span)
+    </footer>
+
+    <!-- Подключение скрипта логики -->
+    <script src="script.js"></script>
+</body>
+</html>
